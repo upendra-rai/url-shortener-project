@@ -29,11 +29,15 @@ public class WebConfig implements WebMvcConfigurer {
 	@Bean
 	CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
-		configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://localhost:3001","http://76.13.245.49:3001",
-				"https://davschool.org", "https://www.davschool.org","http://davschool.org", "http://www.davschool.org"));
+		configuration.setAllowedOrigins(Arrays.asList(
+				"http://localhost:3000",
+				"http://localhost:3001",
+				"http://localhost:5173",
+				"http://localhost:8080"
+		));
 		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-		configuration.setAllowedHeaders(Arrays.asList("Authorization", "Requestor-Type", "Content-Type"));
-		configuration.setAllowCredentials(true); // Add this line if you're sending cookies or auth headers
+		configuration.setAllowedHeaders(Arrays.asList("Authorization", "Requestor-Type", "Content-Type", "Accept", "Origin", "X-Requested-With"));
+		configuration.setAllowCredentials(true);
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		source.registerCorsConfiguration("/**", configuration);
 		return source;

@@ -9,114 +9,73 @@ import io.swagger.v3.oas.annotations.info.License;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.annotations.servers.Server;
+import org.springframework.context.annotation.Configuration;
 
 /**
- * OpenAPI Configuration for DAV School Management Portal
+ * OpenAPI 3.0 Configuration for Distributed URL Shortener Service.
  *
- * This configuration defines the API documentation metadata,
- * security scheme, and server environments for the School Portal.
- *
- * It enables Swagger UI with JWT authentication support.
+ * Defines API metadata, server environments, and JWT Bearer security scheme
+ * for Swagger UI interactive documentation.
  */
-
+@Configuration
 @OpenAPIDefinition(
         info = @Info(
-                title = "DAV School Management Portal API",
+                title = "Distributed URL Shortener Service API",
                 version = "v1.0.0",
                 description = """
-                        DAV School Management Portal is a production-grade backend system
-                        built using Spring Boot to manage academic and administrative
-                        operations of the school.
-                        
-                        The system provides secure REST APIs for managing various
-                        school modules including:
-                        
-                        • User Authentication and Authorization (JWT-based)
-                        • Student Management
-                        • Teacher and Staff Management
-                        • Class and Section Management
-                        • Attendance Management
-                        • Fee Management
-                        • Examination and Result Management
-                        • Timetable Management
-                        • Library Management
-                        • Holiday and Leave Management
-                        • Notification and Communication System
-                        • Media Upload and Document Management
-                        • School Configuration and Settings
-                        
-                        Key Features:
-                        • Secure JWT Authentication
-                        • Role-Based Access Control (RBAC)
-                        • RESTful API Architecture
-                        • Modular and Scalable Design
-                        • Swagger/OpenAPI Documentation
-                        • Production-Level Logging
-                        • Global Exception Handling
-                        • Database Integration (MySQL/PostgreSQL)
-                        • Optional Redis Caching
-                        
-                        This documentation provides complete details of
-                        available endpoints, request/response structures,
-                        and authentication requirements.
+                        High-scale, production-ready Distributed URL Shortener Service built using
+                        Spring Boot 3, Apache ZooKeeper, Redis, and PostgreSQL.
+
+                        ### Key Capabilities:
+                        * **Distributed ID Generation**: Range-based unique ID allocation using Apache ZooKeeper & Curator (Zero Collision).
+                        * **Base62 URL Encoding**: Compact, URL-safe alphanumeric short codes (`[0-9a-zA-Z]`).
+                        * **High-Speed Redirection**: Redis in-memory caching for microsecond-latency redirection (`GET /{code}`).
+                        * **Cache Management**: Automatic Redis cache eviction upon URL updates and deletions.
+                        * **Security & Auth**: Stateless JWT authentication with Bearer tokens, RBAC, and token revocation on logout.
+                        * **URL Analytics & Management**: Track clicks, expiration timestamps, and user URL ownership.
+
+                        ### Available Endpoint Groups:
+                        * **Public Endpoints**: Redirection (`GET /{code}`), Health check (`GET /health`).
+                        * **Authentication Endpoints**: Register (`POST /v1/auth/register`), Login (`POST /v1/auth/login`), Logout (`POST /v1/auth/logout`).
+                        * **Short URL Management**: CRUD operations on short URLs with pagination (`/v1/short-urls`).
                         """,
                 contact = @Contact(
-                        name = "DAV School Development Team",
-                        email = "support@davschool.com",
-                        url = "https://www.davschool.com"
+                        name = "URL Shortener Development Team",
+                        email = "info@test.org",
+                        url = "https://github.com/upendrarai"
                 ),
                 license = @License(
-                        name = "DAV School Private License",
-                        url = "https://www.davschool.com/license"
-                ),
-                termsOfService = "https://www.davschool.com/terms"
+                        name = "Apache 2.0",
+                        url = "https://www.apache.org/licenses/LICENSE-2.0"
+                )
         ),
-
         servers = {
-
                 @Server(
-                        description = "Local Development Environment",
-                        url = "http://localhost:8082"
-                ),
-
-                @Server(
-                        description = "Development Server",
-                        url = "http://76.13.245.49:8082"
-                ),
-
-                @Server(
-                        description = "Production Server",
-                        url = "https://api.davschool.com"
+                        description = "Local Development Server",
+                        url = "http://localhost:8080"
                 )
         },
-
         security = {
                 @SecurityRequirement(name = "bearerAuth")
         }
 )
-
 @SecurityScheme(
         name = "bearerAuth",
         description = """
-                JWT Authentication using Bearer Token.
+                JWT Bearer Token Authentication.
                 
-                Steps to authorize:
-                
-                1. Login using the authentication endpoint.
-                2. Copy the JWT token from the login response.
-                3. Click the 'Authorize' button in Swagger UI.
-                4. Enter the token in the format:
-                
-                   Bearer your-jwt-token
-                
-                5. After authorization you can access all secured APIs.
+                **Instructions:**
+                1. Authenticate via `POST /v1/auth/login` using your credentials.
+                2. Copy the `accessToken` from the JSON response.
+                3. Click **Authorize** (top right) in Swagger UI.
+                4. Paste the token into the Value field (Swagger automatically adds `Bearer ` prefix).
+                5. Execute secured API endpoints.
                 """,
         scheme = "bearer",
         type = SecuritySchemeType.HTTP,
         bearerFormat = "JWT",
         in = SecuritySchemeIn.HEADER
 )
-
 public class OpenApiConfig {
 
 }

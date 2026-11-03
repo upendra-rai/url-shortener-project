@@ -1,4 +1,4 @@
-package com.upendra.url.service.controllers;
+package com.upendra.url.service.dtos;
 
 import lombok.Getter;
 import lombok.Setter;

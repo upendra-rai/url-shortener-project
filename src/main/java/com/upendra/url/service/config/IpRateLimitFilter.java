@@ -20,11 +20,10 @@ public class IpRateLimitFilter extends OncePerRequestFilter {
 	private static final long LIMIT_WINDOW_MS = 5 * 60 * 1000; // 1 minutes
 	private final Map<String, Long> ipLastRequestTime = new ConcurrentHashMap<>();
 
-	List<String> rateLimitedEndpoints = List.of("api/v1/api/free/customer-booking-form",
-			"api/v1/api/free/customer-request-call");
+	List<String> rateLimitedEndpoints = List.of("api/v1/");
 
-	Map<String, Duration> newRateLimitedEndpoints = Map.of("api/v1/api/free/customer-booking-form", Duration.ofMinutes(2),
-			"api/v1/api/free/other-endpoint", Duration.ofMinutes(1));
+	Map<String, Duration> newRateLimitedEndpoints = Map.of("api/v1",
+			Duration.ofMinutes(2), "api/v1/api/free/other-endpoint", Duration.ofMinutes(1));
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
