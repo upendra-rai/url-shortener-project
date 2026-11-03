@@ -1,16 +1,19 @@
 package com.upendra.url.service.security;
 
-import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
+import java.nio.charset.StandardCharsets;
+import java.util.concurrent.atomic.AtomicLong;
+
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.locks.InterProcessMutex;
 import org.apache.zookeeper.KeeperException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.nio.charset.StandardCharsets;
-import java.util.concurrent.atomic.AtomicLong;
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class DistributedIdGenerator {
@@ -30,6 +33,7 @@ public class DistributedIdGenerator {
 
 	@PostConstruct
 	public void initialize() throws Exception {
+		log.info("Initializing DistributedIdGenerator with block size: {}", blockSize);
 		lock = new InterProcessMutex(client, "/locks/id-range");
 		allocateRange();
 	}
@@ -44,6 +48,7 @@ public class DistributedIdGenerator {
 
 		synchronized (this) {
 			if (nextId.get() > maxId) {
+				log.debug("ID block exhausted (current id={}). Allocating next range...", id);
 				allocateRange();
 			}
 		}
@@ -52,6 +57,7 @@ public class DistributedIdGenerator {
 	}
 
 	private void allocateRange() throws Exception {
+		log.debug("Acquiring ZooKeeper lock for ID allocation...");
 		lock.acquire();
 
 		try {
@@ -69,9 +75,11 @@ public class DistributedIdGenerator {
 			client.setData().forPath(COUNTER_PATH, String.valueOf(end).getBytes(StandardCharsets.UTF_8));
 			nextId.set(start);
 			maxId = end;
+			log.info("Successfully allocated new ID block from ZooKeeper: [{} - {}]", start, end);
 
 		} finally {
 			lock.release();
+			log.debug("Released ZooKeeper lock for ID allocation");
 		}
 	}
 }

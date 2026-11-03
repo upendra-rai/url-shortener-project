@@ -62,13 +62,14 @@ public class AuthenticationService {
 	// Customer Register
 	@Transactional
 	public Map<String, Object> teacherRegister(RegisterRequest request) {
+		log.info("Processing user registration for email: {}", request.getEmail());
 		validateDuplicateUser(request.getEmail(), request.getPhone());
 		User user = createUser(request.getName(), request.getEmail(), request.getPhone(), request.getPassword(),
 				Role.SUPERADMIN);
 		user.setStatus(UserStatus.ACTIVE);
 		String otp = RandomUtils.generateOtp(6, false);
 		user.setOtp(otp);
-		log.info("Password / OTP({}) ", otp);
+		log.debug("Generated registration verification OTP for email: {}", request.getEmail());
 		Map<String, Object> model = new HashMap<>();
 		model.put("Name", request.getName());
 		MailRequest emailrequest = new MailRequest();
@@ -79,6 +80,7 @@ public class AuthenticationService {
 		// emailService.sendEmail(emailrequest, model);
 		user.setOtp(otp);
 		repository.save(user);
+		log.info("User registered and saved successfully: id={}, email={}", user.getId(), user.getEmail());
 		return Map.of("statusCode", HttpStatus.CREATED.value() + " ", "isSuccess", Boolean.TRUE, "message",
 				"Please Check Registered Email Also Check Spam Folder!!", "otp", otp);
 	}
@@ -88,6 +90,7 @@ public class AuthenticationService {
 		Optional<User> checkUser = repository.findByPhoneOrEmail(email, phone);
 		if (checkUser.isPresent()) {
 			if (checkUser.get().getEmail().equals(email)) {
+				log.warn("Registration rejected - email already exists: {}", email);
 				throw new RuntimeException("Email already registered: " + email);
 			}
 //			if (checkUser.get().getPhone().equals(phone)) {
@@ -108,11 +111,17 @@ public class AuthenticationService {
 	}
 
 	public UserAuthenticationResponse authenticate(AuthenticationRequest request) {
+		log.info("Authenticating user credentials for email: {}", request.getEmail());
 		authenticationManager
 				.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
-		var user = repository.findByEmail(request.getEmail()).orElseThrow();
+		var user = repository.findByEmail(request.getEmail())
+				.orElseThrow(() -> {
+					log.warn("Authentication failed - user not found with email: {}", request.getEmail());
+					return new ServiceException("User not found");
+				});
 		validateUserStatus(user);
 		var jwtToken = jwtService.generateToken(user);
+		log.info("Authentication successful for email: {}, role: {}", user.getEmail(), user.getRole());
 		// revokeAllUserTokens(user);
 		// saveUserToken(user, jwtToken);
 		return UserAuthenticationResponse.builder().accessToken(jwtToken)
@@ -142,28 +151,37 @@ public class AuthenticationService {
 		final String refreshToken;
 		final String userEmail;
 		if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+			log.warn("Refresh token request missing Bearer token header");
 			return;
 		}
 		refreshToken = authHeader.substring(7);
 		userEmail = jwtService.extractUsername(refreshToken);
 		if (userEmail != null) {
+			log.info("Processing token refresh for user: {}", userEmail);
 			var user = this.repository.findByEmail(userEmail).orElseThrow();
 			if (jwtService.isTokenValid(refreshToken, user)) {
 				var accessToken = jwtService.generateToken(user);
 				revokeAllUserTokens(user);
 				saveUserToken(user, accessToken);
+				log.info("New access token generated successfully for user: {}", userEmail);
 				var authResponse = AuthenticationResponse.builder().accessToken(accessToken).refreshToken(refreshToken)
 						.build();
 				new ObjectMapper().writeValue(response.getOutputStream(), authResponse);
+			} else {
+				log.warn("Invalid refresh token provided for user: {}", userEmail);
 			}
 		}
 	}
 
 	public String logout(String email) {
-		log.info(">>logout({})", email);
+		log.info("Processing manual logout for email: {}", email);
 		User user = repository.findByEmail(email)
-				.orElseThrow(() -> new RuntimeException("User Not Found By : " + email));
+				.orElseThrow(() -> {
+					log.warn("Logout failed - user not found for email: {}", email);
+					return new RuntimeException("User Not Found By : " + email);
+				});
 		user.getTokens().clear();
+		log.info("User logged out successfully: {}", email);
 		return "Logout Successfully";
 	}
 

@@ -14,6 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.upendra.url.service.services.ShortUrlService;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @RestController
 @RequestMapping
 public class FreeController {
@@ -23,6 +26,7 @@ public class FreeController {
 
 	@GetMapping("/health")
 	public ResponseEntity<Map<String, String>> healthCheck() {
+		log.debug("Health check probe invoked");
 		Map<String, String> status = new HashMap<>();
 		status.put("status", "UP");
 		return ResponseEntity.ok(status);
@@ -30,7 +34,9 @@ public class FreeController {
 
 	@GetMapping("/{code}")
 	public ResponseEntity<Void> redirectToOriginalUrl(@PathVariable("code") String code) {
+		log.info("Redirect request received for code: '{}'", code);
 		String originalUrl = shortUrlService.getUrlByCode(code);
+		log.info("Redirecting code '{}' -> '{}'", code, originalUrl);
 		return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(originalUrl)).build();
 	}
 

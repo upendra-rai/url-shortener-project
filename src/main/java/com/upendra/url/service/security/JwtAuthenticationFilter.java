@@ -12,14 +12,14 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.upendra.url.service.repositories.TokenRepository;
-
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -30,9 +30,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	@Autowired
 	private  UserDetailsService userDetailsService;
 
-	@Autowired
-	private  TokenRepository tokenRepository;
-	
 	public static String CURRENT_USER = ""; 
 	
 	@Override
@@ -43,11 +40,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			return;
 		}
 		
-		System.out.println("==== JWT FILTER ====");
-		System.out.println("Path: " + request.getServletPath());
-		 String authHeader = request.getHeader("Authorization");
-		System.out.println("Authorization: " + authHeader);
-		
+		String authHeader = request.getHeader("Authorization");
 		final String jwt;
 		final String userEmail;
 		if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -67,9 +60,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 				CURRENT_USER=userDetails.getUsername();
 				authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 				SecurityContextHolder.getContext().setAuthentication(authToken);
+				log.debug("Authenticated user '{}' for path: {}", userEmail, request.getServletPath());
 			}
 		}
-		System.out.println("Email: " + userEmail);
 		filterChain.doFilter(request, response);
 	}
 }
