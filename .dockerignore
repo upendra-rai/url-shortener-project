@@ -1,0 +1,21 @@
+# Git & OS files
+.git
+.gitignore
+.DS_Store
+
+# IDE and Editor files
+.idea/
+*.iml
+.project
+.classpath
+.settings/
+.factorypath
+.vscode/
+
+# Build artifacts & temp files
+target/
+*.log
+logs/
+
+# Pipeline documentation / scripts
+DockerPipeline*.txt
